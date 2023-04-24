@@ -14,7 +14,7 @@ from .waveform_metrics import calculate_waveform_metrics
 def calculate_mean_waveforms(args):
 
     print('ecephys spike sorting: mean waveforms module')
-    
+
     start = time.time()
 
     print("Loading data...")
@@ -26,6 +26,22 @@ def calculate_mean_waveforms(args):
             load_kilosort_data(args['directories']['kilosort_output_directory'], \
                 args['ephys_params']['sample_rate'], \
                 convert_to_seconds = False)
+
+## Edward added this part to use this module for manually curated data
+    for new_template_id in range(np.max(spike_templates)+1,np.max(spike_clusters)+1):
+        corr_template_id_list = spike_templates[np.where(spike_clusters==new_template_id)[0]]
+        if corr_template_id_list.size==0:
+            new_row = np.zeros((1,np.shape(templates)[1],np.shape(templates)[2]))
+            templates = np.vstack((templates, new_row))
+        else:
+
+            corr_template_id = np.bincount(corr_template_id_list).argmax()
+#     templates[new_template_id,:,:] = templates[corr_template_id,:,:]
+#     templates = np.vstack((templates, templates[corr_template_id,:,:]))
+            new_row = templates[corr_template_id,:,:]
+            new_row = np.expand_dims(new_row, axis=0)
+            templates = np.vstack((templates, new_row))
+
 
     print("Calculating mean waveforms...")
 
@@ -45,7 +61,7 @@ def calculate_mean_waveforms(args):
 
     print('total time: ' + str(np.around(execution_time,2)) + ' seconds')
     print()
-    
+
     return {"execution_time" : execution_time} # output manifest
 
 
